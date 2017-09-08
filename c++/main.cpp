@@ -1,8 +1,9 @@
 #include <message.pb.h>
 
 
-void server() {}
-void client() {}
+void server()  {}
+void client()  {}
+void readLog() {}
 
 int main()
   {

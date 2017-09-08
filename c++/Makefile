@@ -15,9 +15,12 @@ all: main
 		$(OBJ)/main.o \
 			$(L_PROTOBUF) -lprotobuf -pthread -lpthread
 
-main: mkdir_obj
+main: mkdir_obj protobuf
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c main.cpp -o $(OBJ)/main.o
 
+
+protobuf:
+	protoc --cpp_out=. message.proto
 
 mkdir_build:
 	mkdir -p $(BUILD)
