@@ -10,13 +10,17 @@ BUILD=./build
 OBJ=$(BUILD)/obj
 BIN=$(BUILD)/bin
 
-all: main
+all: message main
 	$(CXX) -o $(BIN)/app \
 		$(OBJ)/main.o \
+		$(OBJ).message.o \
 			$(L_PROTOBUF) -lprotobuf -pthread -lpthread
 
 main: mkdir_obj protobuf
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c main.cpp -o $(OBJ)/main.o
+
+message: mkdir_obj protobuf
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c message.cpp -o $(OBJ).message.o
 
 
 protobuf:
