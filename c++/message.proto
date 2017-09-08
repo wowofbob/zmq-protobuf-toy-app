@@ -1,0 +1,72 @@
+syntax = "proto2";
+
+package file;
+
+
+// Type of action to perform.
+enum ActionType {
+  ECHO  = 0;
+  READ  = 1;
+  WRITE = 2;
+}
+
+// Data in this action doesn't change.
+message Echo {
+  required string data = 1;
+}
+
+
+// Request to perform an action.
+message Request {
+
+  // Data to perform reading.
+  message Read {
+    required string filename = 1;
+  }
+
+  // Data to perform writing.
+  message Write {
+    required string filename = 1;
+    required string contents = 2; 
+  }
+
+  // Size of requiest.
+  required uint64     size = 1;
+  // Request's action type.
+  required ActionType type = 2;
+  
+  // Data required to perform an action.
+  optional Echo  echo  = 100;
+  optional Read  read  = 101;
+  optional Write write = 102;
+  
+}
+
+
+// Reply for request.
+message Reply {
+
+  // Data retrieved after performing Read action.
+  message Read {
+    optional string contents = 1;
+  }
+  
+  // Data retrieved after performing Write action (no data).
+  message Write {
+  }
+  
+  // Size of reply.
+  required uint64     size = 1;
+  // What action was performed.
+  required ActionType type = 2;
+  
+  // Was it successful or not?
+  optional bool   error    = 3;
+  // If it wasn't, then what happened?
+  optional string message  = 4;
+  
+  // Data returned on success.
+  optional Echo  echo  = 100;
+  optional Read  read  = 101;
+  optional Write write = 102;
+}
