@@ -1,26 +1,40 @@
+
+#include <memory>
+
 #include <message.pb.h>
 #include <message.hpp>
+#include <message/echo.hpp>
+#include <message/read.hpp>
+#include <message/write.hpp>
+
 
 void server()  {}
 void client()  {}
 void readLog() {}
 
+
+struct request_handler
+  : public echo_handler
+  , public read_handler
+  , public write_handler {};
+
+
 int main()
   {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     
+    echo_request  echo_req("hello world!");
+    read_request  read_req("temp.txt");
+    write_request write_req("foo.txt", "boo");
     
-    msg::req::echo_request er("hello world!");
+    request_handler h;
     
-    msg::req::echo_request_handler erh;
-   
-    er.dispatch(erh);
-    erh(er);
+    std::unique_ptr<echo_reply>  echo_rep0 (echo_handler()(echo_req));
+    std::unique_ptr<read_reply>  read_rep0 (read_handler()(read_req));
+    std::unique_ptr<write_reply> write_rep0(write_handler()(write_req));
     
-    msg::req::request_handler req_h;
-    //req_h(er);
-    er.dispatch(req_h);
+    std::unique_ptr<echo_reply>  echo_rep1 (echo_req.dispatch(h));
+    std::unique_ptr<read_reply>  read_rep1 (read_req.dispatch(h));
+    std::unique_ptr<write_reply> write_rep1(write_req.dispatch(h));
     
-    msg::req::read_request rr("temp.txt");
-    rr.dispatch(req_h);
   }

@@ -2,93 +2,47 @@
 #define _MESSAGE_HPP_
 
 #include <string>
-#include <iostream>
-
-namespace msg {
 
 
-  struct msg_handler_base {
-    virtual ~msg_handler_base() {}
-  };
+// Handler.
 
-  template<typename MsgType>
-  struct msg_handler : public virtual msg_handler_base {
-    virtual void operator()(MsgType const&) = 0;
-  };
+struct handler_base {
+  virtual ~handler_base() {};
+};
+
+template<class Req, class Rep>
+struct handler : public virtual handler_base {
+  virtual Rep* operator()(Req const&) = 0;
+  virtual ~handler() {}
+};
 
 
-  class msg_base {
+// Request.
+template<class Rep>
+class request {
+protected:
+  template<class Req>
+  Rep* dyn_dispatch(handler_base& h, Req const& req)
+    {
+      dynamic_cast<handler<Req, Rep>&>(h)(req);
+    }
+public:  
+  virtual ~request() {}
+};
 
-  protected:
 
-    template<typename MsgType>
-    void dyn_dispatch(msg_handler_base& h, MsgType const& msg)  
-      {
-        dynamic_cast<msg_handler<MsgType>&>(h)(msg);
-      }  
-
-  public:
-
-    virtual ~msg_base() {}
-
-  };
-
-  
-  namespace req {
-
-    // Request base.
-
-    struct request_base : public msg_base {
-      virtual ~request_base() {}
-    };
-
-    template<typename ReqType>
-    struct request_handler_base : public virtual msg_handler<ReqType> {
-      virtual ~request_handler_base() {}
-    };
-
-    
-    //* ECHO
-
-    class echo_request : public request_base {
-      std::string m_data;
-    public:
-      echo_request(std::string const&);
-      std::string const& get() const;
-      void dispatch(msg_handler_base&);
-    };
-    
-    struct echo_request_handler :
-      virtual public request_handler_base<echo_request>
-        {
-          void operator()(echo_request const&);
-        };
-
-    
-    //* READ
-    
-    class read_request : public request_base {
-      std::string m_filename;
-    public:
-      read_request(std::string const&);
-      std::string const& get() const;
-      void dispatch(msg_handler_base&);
-    };
-    
-    struct read_request_handler :
-      virtual public request_handler_base<read_request>
-        {
-          void operator()(read_request const&);
-        };
-    
-    
-    //* Handle everything.
-    struct request_handler
-      : public echo_request_handler
-      , public read_request_handler {};
-      
-  }
-}
+// Reply.
+class reply {
+  bool               m_error;
+  std::string const& m_message;
+public:
+  reply
+    ( bool
+    , std::string const& );
+  bool               error()   const;
+  std::string const& message() const;
+  virtual ~reply() {}
+};
 
 
 #endif//_MESSAGE_HPP_

@@ -5,11 +5,11 @@ package file;
 
 // Type of action to perform.
 enum ActionType {
-  ECHO       = 0;
-  READ       = 1;
-  WRITE      = 2;
-  OpenLogger = 3;
+  ECHO  = 0;
+  READ  = 1;
+  WRITE = 2;
 }
+
 
 // Data in this action doesn't change.
 message Echo {
@@ -29,10 +29,6 @@ message Request {
   message Write {
     required string filename = 1;
     required string contents = 2; 
-  }
-  
-  // Ask server to setup a logger.
-  message OpenLogger {
   }
 
   // Size of requiest.
@@ -60,10 +56,6 @@ message Reply {
   message Write {
   }
   
-  // Open logger result.
-  message OpenLogger {
-  }
-  
   // Size of reply.
   required uint64     size = 1;
   // What action was performed.
@@ -78,6 +70,5 @@ message Reply {
   optional Echo       echo       = 100;
   optional Read       read       = 101;
   optional Write      write      = 102;
-  optional OpenLogger openLogger = 103;
   
 }
