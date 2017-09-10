@@ -19,7 +19,7 @@ class echo_request : public request<echo_reply> {
 public:
   echo_request(std::string const&);
   std::string const& data() const;
-  echo_reply* dispatch(handler_base&);
+  add_dispatch(echo_request, echo_reply);
 };
 
 

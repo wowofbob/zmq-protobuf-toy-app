@@ -45,4 +45,22 @@ public:
 };
 
 
+// Macro tools.
+
+#define declare_dispatch(req, rep) \
+  rep* dispatch(handler_base&);
+
+#define define_dispatch(req, rep) \
+  rep* req::dispatch(handler_base& h) \
+    {                                 \
+      dyn_dispatch(h, *this);         \
+    }
+
+#define add_dispatch(req, rep) \
+  rep* dispatch(handler_base& h) \
+    {                            \
+      dyn_dispatch(h, *this);    \
+    }
+
+
 #endif//_MESSAGE_HPP_

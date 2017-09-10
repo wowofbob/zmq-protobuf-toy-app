@@ -19,7 +19,7 @@ public:
     , std::string const& );
   std::string const& filename() const;
   std::string const& contents() const;
-  write_reply* dispatch(handler_base&);
+  add_dispatch(write_request, write_reply);
 };
 
 struct write_handler :

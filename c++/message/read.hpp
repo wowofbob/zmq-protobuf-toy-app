@@ -19,7 +19,7 @@ class read_request : public request<read_reply> {
 public:
   read_request(std::string const&);
   std::string const& filename() const;
-  read_reply* dispatch(handler_base&);
+  add_dispatch(read_request, read_reply);
 };
 
 struct read_handler :

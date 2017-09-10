@@ -14,11 +14,6 @@ std::string const& read_request::filename() const
     return m_filename;
   }
 
-read_reply* read_request::dispatch(handler_base& h)
-  {
-    dyn_dispatch(h, *this);
-  }
-
 
 // Reply.
 

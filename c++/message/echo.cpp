@@ -14,11 +14,6 @@ std::string const& echo_request::data() const
     return m_data;
   }
 
-echo_reply* echo_request::dispatch(handler_base& h)
-  {
-    dyn_dispatch(h, *this);
-  }
-
 
 // Reply.
 

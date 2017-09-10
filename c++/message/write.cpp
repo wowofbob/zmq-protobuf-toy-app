@@ -22,11 +22,6 @@ std::string const& write_request::contents() const
     return m_contents;
   }
 
-write_reply* write_request::dispatch(handler_base& h)
-  {
-    dyn_dispatch(h, *this);
-  }
-
 
 // Reply.
 
