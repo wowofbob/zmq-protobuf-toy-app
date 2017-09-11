@@ -8,6 +8,7 @@ struct write_reply : public reply {
   write_reply
     ( bool
     , std::string const& );
+  std::vector<uint8_t> encode() const;
 };
 
 class write_request : public request<write_reply> {
@@ -19,6 +20,7 @@ public:
     , std::string const& );
   std::string const& filename() const;
   std::string const& contents() const;
+  std::vector<uint8_t> encode() const;
   add_dispatch(write_request, write_reply);
 };
 

@@ -12,6 +12,7 @@ public:
     , std::string const&
     , std::string const& );
   std::string const& contents() const;
+  std::vector<uint8_t> encode() const;
 };
 
 class read_request : public request<read_reply> {
@@ -19,6 +20,7 @@ class read_request : public request<read_reply> {
 public:
   read_request(std::string const&);
   std::string const& filename() const;
+  std::vector<uint8_t> encode() const;
   add_dispatch(read_request, read_reply);
 };
 

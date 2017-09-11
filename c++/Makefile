@@ -14,6 +14,7 @@ all: mkdir_bin message echo read write main
 	$(CXX) -o $(BIN)/app \
 		$(OBJ)/main.o \
 		$(OBJ)/message.o \
+		$(OBJ)/message.pb.o \
 		$(OBJ)/echo.o \
 		$(OBJ)/read.o \
 		$(OBJ)/write.o \
@@ -23,7 +24,7 @@ main: mkdir_obj protobuf
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c main.cpp -o $(OBJ)/main.o
 
 message: mkdir_obj protobuf
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c message.cpp -o $(OBJ)/message.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c message.cpp -o $(OBJ)/message.o
 
 echo: mkdir_obj
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c message/echo.cpp -o $(OBJ)/echo.o
@@ -36,6 +37,7 @@ write: mkdir_obj
 
 protobuf:
 	protoc --cpp_out=. message.proto
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c message.pb.cc -o $(OBJ)/message.pb.o
 
 mkdir_build:
 	mkdir -p $(BUILD)

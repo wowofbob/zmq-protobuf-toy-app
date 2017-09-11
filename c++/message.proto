@@ -31,8 +31,6 @@ message Request {
     required string contents = 2; 
   }
 
-  // Size of requiest.
-  required uint64     size = 1;
   // Request's action type.
   required ActionType type = 2;
   
@@ -56,8 +54,6 @@ message Reply {
   message Write {
   }
   
-  // Size of reply.
-  required uint64     size = 1;
   // What action was performed.
   required ActionType type = 2;
   

@@ -1,5 +1,7 @@
 #include "echo.hpp"
 
+#include <message.pb.h>
+
 #include <iostream>
 
 
@@ -38,3 +40,43 @@ echo_reply* echo_handler::
       std::cout << "ECHO: " << req.data() << std::endl;
       return new echo_reply(false, "OK", req.data());
     }
+    
+
+// Encode.
+
+std::vector<uint8_t> echo_reply::encode() const
+  {
+    ::file::Reply rep;
+    
+    rep.set_type(::file::ECHO);
+    rep.set_error(error());
+    rep.set_message(message());
+    
+    ::file::Echo* echo = new ::file::Echo();
+    echo->set_data(data());
+    
+    rep.set_allocated_echo(echo);
+    
+    std::vector<uint8_t> buffer(rep.ByteSizeLong());
+    rep.SerializeToArray(buffer.data(), buffer.size());
+    
+    return buffer;
+  }
+
+std::vector<uint8_t> echo_request::encode() const
+  {
+    ::file::Request req;
+    
+    req.set_type(::file::READ);
+    
+    ::file::Echo* echo = new ::file::Echo();
+    echo->set_data(data());
+    
+    req.set_allocated_echo(echo);
+    
+    std::vector<uint8_t> buffer(req.ByteSizeLong());
+    req.SerializeToArray(buffer.data(), buffer.size());
+    
+    return buffer;
+    
+  }

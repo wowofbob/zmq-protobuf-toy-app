@@ -12,6 +12,7 @@ public:
     , std::string const&
     , std::string const& );
   std::string const& data() const;
+  std::vector<uint8_t> encode() const;
 };
 
 class echo_request : public request<echo_reply> {
@@ -19,6 +20,7 @@ class echo_request : public request<echo_reply> {
 public:
   echo_request(std::string const&);
   std::string const& data() const;
+  std::vector<uint8_t> encode() const;
   add_dispatch(echo_request, echo_reply);
 };
 

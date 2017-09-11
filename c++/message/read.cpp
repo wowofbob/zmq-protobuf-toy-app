@@ -1,5 +1,7 @@
 #include "read.hpp"
 
+#include <message.pb.h>
+
 #include <iostream>
 
 
@@ -38,3 +40,42 @@ read_reply* read_handler::
       std::cout << "READ: " << req.filename() << std::endl;
       return new read_reply(false, "OK", "...");
     }
+    
+
+// Encode.
+
+std::vector<uint8_t> read_reply::encode() const
+  {
+    ::file::Reply rep;
+    
+    rep.set_type(::file::READ);
+    rep.set_error(error());
+    rep.set_message(message());
+    
+    ::file::Reply_Read* read = new ::file::Reply_Read();
+    read->set_contents(contents());
+    
+    rep.set_allocated_read(read);
+    
+    std::vector<uint8_t> buffer(rep.ByteSizeLong());
+    rep.SerializeToArray(buffer.data(), buffer.size());
+    
+    return buffer;
+  }
+
+std::vector<uint8_t> read_request::encode() const
+  {
+    ::file::Request req;
+    
+    req.set_type(::file::READ);
+    
+    ::file::Request_Read* read = new ::file::Request_Read();
+    read->set_filename(filename());
+    
+    req.set_allocated_read(read);
+    
+    std::vector<uint8_t> buffer(req.ByteSizeLong());
+    req.SerializeToArray(buffer.data(), buffer.size());
+    
+    return buffer;
+  }
