@@ -39,61 +39,17 @@ public:
       
   void write(std::vector<uint8_t> const& buffer)
     {
-      int i = 0;
-      printf("%i\n", (i++));
-      
-      size_t size = buffer.size();
-      zmq::message_t msg(sizeof(size_t) + buffer.size());
-      
-      printf("%i\n", (i++));
-      
-      // Copy size.
-      memcpy
-        ( msg.data()
-        , &size
-        , sizeof(size_t) );
-      
-      printf("%i\n", (i++));
-      
-      // Copy data.
-      memcpy
-        ( ((uint8_t*)msg.data()) + sizeof(size_t)
-        , buffer.data()
-        , buffer.size() );
-      
-      printf("%i\n", (i++));
+      zmq::message_t msg(buffer.size());
+      memcpy(msg.data(), buffer.data(), buffer.size());
       m_skt.send(msg);
-      
-      printf("%i\n", (i++));
     }
 
   void read(std::vector<uint8_t>& buffer)
     {
-      int i = 10;
-      printf("%i\n", (i++));
-      
-      size_t size = 0;
-      
-      // Get size.
-      {
-        zmq::message_t header(sizeof(size_t));
-        m_skt.recv(&header);
-        memcpy(&size, header.data(), sizeof(size_t));
-      }
-      
-      printf("%i\n", (i++));
-      
-      buffer.resize(size);
-      std::cout << "size = " << buffer.size() << std::endl;
-      
-      // Fill buffer.
-      {
-        zmq::message_t data(buffer.size());
-        m_skt.recv(&data);
-        memcpy(buffer.data(), data.data(), buffer.size());
-      }
-      
-      printf("%i\n", (i++));
+      zmq::message_t reply;
+      m_skt.recv(&reply);
+      buffer.resize(reply.size());
+      memcpy(buffer.data(), reply.data(), buffer.size());
     }
 };
 
