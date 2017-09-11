@@ -9,6 +9,7 @@ struct write_reply : public reply {
     ( bool
     , std::string const& );
   std::vector<uint8_t> encode() const;
+  add_dispatch(write_reply, void);
 };
 
 class write_request : public request<write_reply> {
@@ -21,11 +22,11 @@ public:
   std::string const& filename() const;
   std::string const& contents() const;
   std::vector<uint8_t> encode() const;
-  add_dispatch(write_request, write_reply);
+  add_dispatch(write_request, write_reply*);
 };
 
 struct write_handler :
-  virtual public handler<write_request, write_reply>
+  virtual public msg_handler<write_request, write_reply*>
     {
       write_reply* operator()(write_request const&);
     };

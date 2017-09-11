@@ -51,7 +51,7 @@ request_base* parse_request(std::vector<uint8_t> const& buffer)
     return nullptr;
   }
 
-reply* parse_reply(std::vector<uint8_t> const& buffer)
+reply_base* parse_reply(std::vector<uint8_t> const& buffer)
   {
     file::Reply rep;
     if (rep.ParseFromArray(buffer.data(), buffer.size()))

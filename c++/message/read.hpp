@@ -13,6 +13,7 @@ public:
     , std::string const& );
   std::string const& contents() const;
   std::vector<uint8_t> encode() const;
+  add_dispatch(read_reply, void);
 };
 
 class read_request : public request<read_reply> {
@@ -21,11 +22,11 @@ public:
   read_request(std::string const&);
   std::string const& filename() const;
   std::vector<uint8_t> encode() const;
-  add_dispatch(read_request, read_reply);
+  add_dispatch(read_request, read_reply*);
 };
 
 struct read_handler :
-  virtual public handler<read_request, read_reply>
+  virtual public msg_handler<read_request, read_reply*>
     {
       read_reply* operator()(read_request const&);
     };

@@ -13,6 +13,7 @@ public:
     , std::string const& );
   std::string const& data() const;
   std::vector<uint8_t> encode() const;
+  add_dispatch(echo_reply, void);
 };
 
 class echo_request : public request<echo_reply> {
@@ -21,12 +22,12 @@ public:
   echo_request(std::string const&);
   std::string const& data() const;
   std::vector<uint8_t> encode() const;
-  add_dispatch(echo_request, echo_reply);
+  add_dispatch(echo_request, echo_reply*);
 };
 
 
 struct echo_handler :
-  virtual public handler<echo_request, echo_reply>
+  virtual public msg_handler<echo_request, echo_reply*>
     {
       echo_reply* operator()(echo_request const&);
     };

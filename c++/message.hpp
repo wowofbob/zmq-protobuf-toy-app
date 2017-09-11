@@ -13,42 +13,53 @@ struct encodable {
 };
 
 
-// Handler.
+struct msg_handler_base {
+  virtual ~msg_handler_base() {}
+};
 
-struct handler_base {
-  virtual ~handler_base() {};
+struct msg_base : public encodable {
+  virtual ~msg_base() {}
 };
 
 template<class In, class Out>
-struct handler : public virtual handler_base {
-  virtual Out* operator()(In const&) = 0;
-  virtual ~handler() {}
+struct msg_handler : public virtual msg_handler_base {
+  virtual Out operator()(In const&) = 0;
+  virtual ~msg_handler() {}
+};
+
+template<class Out>
+class message : public msg_base {
+protected:
+  template<class In>
+  Out dyn_dispatch(msg_handler_base& h, In const& req)
+    {
+      dynamic_cast<msg_handler<In, Out>&>(h)(req);
+    }
+public:  
+  virtual ~message() {}
 };
 
 
-// Base request.
-struct reply;
-struct request_base : public encodable {
-  virtual reply* dispatch(handler_base&) = 0;
+// Handler.
+
+struct reply_base {
+  virtual void dispatch(msg_handler_base& h) = 0;
+  virtual ~reply_base() {}
+};
+
+struct request_base {
+  virtual reply_base* dispatch(msg_handler_base& h) = 0;
   virtual ~request_base() {}
 };
 
-// Request.
 template<class Rep>
-class request : public request_base {
-protected:
-  template<class Req>
-  Rep* dyn_dispatch(handler_base& h, Req const& req)
-    {
-      dynamic_cast<handler<Req, Rep>&>(h)(req);
-    }
-public:  
+struct request : public message<Rep*>, public request_base {
   virtual ~request() {}
 };
 
 
 // Reply.
-class reply : public encodable {
+class reply : public message<void>, public reply_base  {
   bool               m_error;
   std::string const& m_message;
 public:
@@ -63,17 +74,8 @@ public:
 
 // Macro tools.
 
-#define declare_dispatch(req, rep) \
-  rep* dispatch(handler_base&);
-
-#define define_dispatch(req, rep) \
-  rep* req::dispatch(handler_base& h) \
-    {                                 \
-      dyn_dispatch(h, *this);         \
-    }
-
 #define add_dispatch(req, rep) \
-  rep* dispatch(handler_base& h) \
+  rep dispatch(msg_handler_base& h) \
     {                            \
       dyn_dispatch(h, *this);    \
     }
@@ -82,7 +84,7 @@ public:
 // Parse.
 
 request_base* parse_request(std::vector<uint8_t> const&);
-reply*        parse_reply(std::vector<uint8_t> const&);
+reply_base*   parse_reply  (std::vector<uint8_t> const&);
 
 
 #endif//_MESSAGE_HPP_
