@@ -42,6 +42,15 @@ write_reply* write_handler::
       return new write_reply(false, "OK");
     }
 
+void write_reply_handler::
+  operator()(write_reply const& rep)
+    {
+      std::cout
+        << "WRITE\n"
+        << "  error:    " << rep.error()    << std::endl
+        << "  message:  " << rep.message()  << std::endl << std::endl;
+    }
+
 
 // Encode.
 

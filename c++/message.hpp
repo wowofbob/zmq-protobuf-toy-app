@@ -17,7 +17,7 @@ struct msg_handler_base {
   virtual ~msg_handler_base() {}
 };
 
-struct msg_base : public encodable {
+struct msg_base {
   virtual ~msg_base() {}
 };
 
@@ -42,12 +42,12 @@ public:
 
 // Handler.
 
-struct reply_base {
+struct reply_base : public encodable {
   virtual void dispatch(msg_handler_base& h) = 0;
   virtual ~reply_base() {}
 };
 
-struct request_base {
+struct request_base : public encodable {
   virtual reply_base* dispatch(msg_handler_base& h) = 0;
   virtual ~request_base() {}
 };
@@ -60,8 +60,8 @@ struct request : public message<Rep*>, public request_base {
 
 // Reply.
 class reply : public message<void>, public reply_base  {
-  bool               m_error;
-  std::string const& m_message;
+  bool        m_error;
+  std::string m_message;
 public:
   reply
     ( bool

@@ -32,5 +32,10 @@ struct echo_handler :
       echo_reply* operator()(echo_request const&);
     };
     
+struct echo_reply_handler :
+  virtual public msg_handler<echo_reply, void>
+    {
+      void operator()(echo_reply const&);
+    };
 
 #endif//_MESSAGE_ECHO_HPP_

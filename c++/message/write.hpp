@@ -31,5 +31,10 @@ struct write_handler :
       write_reply* operator()(write_request const&);
     };
     
+struct write_reply_handler :
+  virtual public msg_handler<write_reply, void>
+    {
+      void operator()(write_reply const&);
+    };
 
 #endif//_MESSAGE_WRITE_HPP_

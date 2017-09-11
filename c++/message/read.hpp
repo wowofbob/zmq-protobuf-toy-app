@@ -31,5 +31,11 @@ struct read_handler :
       read_reply* operator()(read_request const&);
     };
 
+struct read_reply_handler :
+  virtual public msg_handler<read_reply, void>
+    {
+      void operator()(read_reply const&);
+    };
+
 
 #endif//_MESSAGE_READ_HPP_

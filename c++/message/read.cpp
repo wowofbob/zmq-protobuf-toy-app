@@ -41,6 +41,16 @@ read_reply* read_handler::
       return new read_reply(false, "OK", "...");
     }
     
+void read_reply_handler::
+  operator()(read_reply const& rep)
+    {
+      std::cout
+        << "READ\n"
+        << "  error:    " << rep.error()    << std::endl
+        << "  message:  " << rep.message()  << std::endl
+        << "  contents: " << rep.contents() << std::endl << std::endl;
+    }
+
 
 // Encode.
 

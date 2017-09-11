@@ -38,9 +38,21 @@ echo_reply* echo_handler::
   operator()(echo_request const& req)
     {
       std::cout << "ECHO: " << req.data() << std::endl;
-      return new echo_reply(false, "OK", req.data());
+      std::string msg("OK");
+      echo_reply* rep = new echo_reply(false, msg, req.data());
+      return rep;
     }
     
+void echo_reply_handler::
+  operator()(echo_reply const& rep)
+    {
+      std::cout
+        << "ECHO\n"
+        << "  error:    " << rep.error()   << std::endl
+        << "  message:  " << rep.message() << std::endl
+        << "  data:     " << rep.data()    << std::endl << std::endl;
+    }
+
 
 // Encode.
 

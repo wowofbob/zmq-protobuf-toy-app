@@ -5,6 +5,7 @@ LIB=
 
 I_PROTOBUF=-I/usr/local/include
 L_PROTOBUF=-Wl,-rpath,/usr/local/lib -L/usr/local/lib
+L_ZMQ=-Wl,-rpath,/usr/local/lib -L/usr/local/lib
 
 BUILD=./build
 OBJ=$(BUILD)/obj
@@ -18,7 +19,8 @@ all: mkdir_bin message echo read write main
 		$(OBJ)/echo.o \
 		$(OBJ)/read.o \
 		$(OBJ)/write.o \
-			$(L_PROTOBUF) -lprotobuf -pthread -lpthread
+			$(L_PROTOBUF) -lprotobuf -pthread -lpthread \
+			$(L_ZMQ) -lzmq
 
 main: mkdir_obj protobuf
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $(I_PROTOBUF) -c main.cpp -o $(OBJ)/main.o
