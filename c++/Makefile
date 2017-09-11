@@ -10,7 +10,7 @@ BUILD=./build
 OBJ=$(BUILD)/obj
 BIN=$(BUILD)/bin
 
-all: message echo read main
+all: mkdir_bin message echo read write main
 	$(CXX) -o $(BIN)/app \
 		$(OBJ)/main.o \
 		$(OBJ)/message.o \
