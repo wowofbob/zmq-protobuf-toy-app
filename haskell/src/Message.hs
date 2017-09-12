@@ -70,15 +70,30 @@ utf8ToText (Utf8 bs) = TE.decodeUtf8 $ BSL.toStrict bs
 
 parseRequest :: BSL.ByteString -> Maybe Request
 parseRequest buffer =
-  do fReq  <- parseRequest' buffer
-  
+  do fReq <- messageGet' buffer
      case FileReq.type' fReq of
        File.ECHO ->
          EchoReq . utf8ToText . File.data' <$> FileReq.echo fReq
-       File.READ  ->
+       File.READ ->
          ReadReq . utf8ToText . FileReqRead.filename <$> FileReq.read fReq
        File.WRITE ->
           do fRW <- FileReq.write fReq
              let fileName = utf8ToText . FileReqWrite.filename $ fRW
                  contents = utf8ToText . FileReqWrite.contents $ fRW
              Just (WriteReq fileName contents)
+
+
+parseRepData :: BSL.ByteString -> Maybe RepData
+parseRepData buffer =
+  do fRep <- messageGet' buffer
+     case FileRep.type' fRep of
+       File.ECHO ->
+         EchoRepData . utf8ToText . File.data' <$> FileRep.echo fRep
+       File.READ ->
+            -- I didn't noticed that I marked contents
+            -- field in read reply as optional :/
+         do mContents <- FileRep.contents <$> FileRep.read fRep
+            ReadRepData . utf8ToText <$> mContents 
+       File.WRITE ->
+         do mRW <- FileRep.write fRep
+            Just WriteRepData
