@@ -1,5 +1,7 @@
 protocol-buffers
 haskell/.stack-work
+haskell/src/File.hs
+haskell/src/File
 build
 *~
 *.pb.*

@@ -6,9 +6,19 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 library
-  exposed-modules:
+  exposed-modules:   File
+                   , File.ActionType
+                   , File.Echo
+                   , File.Reply
+                   , File.Request
+                   , File.Reply.Read
+                   , File.Reply.Write
+                   , File.Request.Read
+                   , File.Request.Write
     
   build-depends:     base >=4.6 && < 4.10
+                   , protocol-buffers
+                   , protocol-buffers-descriptor
                   
   hs-source-dirs:      src
   include-dirs:        src
