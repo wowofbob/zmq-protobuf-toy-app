@@ -39,8 +39,8 @@ data RepData
 
 data Answer a
   = Answer
-  { answError   :: Bool
-  , answMessage :: T.Text
+  { answError   :: Maybe Bool
+  , answMessage :: Maybe T.Text
   , answData    :: a }
 
 
@@ -83,17 +83,23 @@ parseRequest buffer =
              Just (WriteReq fileName contents)
 
 
-parseRepData :: BSL.ByteString -> Maybe RepData
-parseRepData buffer =
+parseReply :: BSL.ByteString -> Maybe Reply
+parseReply buffer =
   do fRep <- messageGet' buffer
-     case FileRep.type' fRep of
-       File.ECHO ->
-         EchoRepData . utf8ToText . File.data' <$> FileRep.echo fRep
-       File.READ ->
-            -- I didn't noticed that I marked contents
-            -- field in read reply as optional :/
-         do mContents <- FileRep.contents <$> FileRep.read fRep
-            ReadRepData . utf8ToText <$> mContents 
-       File.WRITE ->
-         do mRW <- FileRep.write fRep
-            Just WriteRepData
+     repData <- case FileRep.type' fRep of
+                  File.ECHO ->
+                    EchoRepData . utf8ToText . File.data' <$> FileRep.echo fRep
+                  File.READ ->
+                       -- I didn't noticed that I marked contents
+                       -- field in read reply as optional :/
+                    do mContents <- FileRep.contents <$> FileRep.read fRep
+                       ReadRepData . utf8ToText <$> mContents 
+                  File.WRITE ->
+                    do mRW <- FileRep.write fRep
+                       Just WriteRepData
+         
+         -- Error and message field should be required too I guess.
+     let mError   = FileRep.error fRep
+         mMessage = utf8ToText <$> FileRep.message fRep
+     
+     Just (Answer mError mMessage repData)
