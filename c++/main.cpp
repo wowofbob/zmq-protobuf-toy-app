@@ -18,42 +18,54 @@
 #include <message/write.hpp>
 
 
-class IO {
-private:
+// Structure with socket.
+class with_socket {
   zmq::context_t m_ctx;
   zmq::socket_t  m_skt;
+protected:
+  zmq::socket_t& get_socket()
+    {
+      return m_skt;
+    }
 public:
-  IO(char const* addr, int type)
+  with_socket(int type)
     : m_ctx(1)
-    , m_skt(m_ctx, type)
+    , m_skt(m_ctx, type) {}
+};
+
+// Socket only for push.
+struct push_socket : public with_socket {
+  push_socket(char const* addr)
+    : with_socket(ZMQ_PUSH)
       {
-        if (type == ZMQ_PUSH)
-          {
-            m_skt.bind(addr);
-          }
-        else
-          {
-            m_skt.connect(addr);
-          }
+        get_socket().bind(addr);
       }
-      
-  void write(std::vector<uint8_t> const& buffer)
+  void operator()(std::vector<uint8_t> const& buffer)
     {
       zmq::message_t msg(buffer.size());
       memcpy(msg.data(), buffer.data(), buffer.size());
-      m_skt.send(msg);
+      get_socket().send(msg);
     }
+};
 
-  void read(std::vector<uint8_t>& buffer)
+// Socket only for pull.
+struct pull_socket : public with_socket {
+  pull_socket(char const* addr)
+    : with_socket(ZMQ_PULL)
+      {
+        get_socket().connect(addr);
+      }
+  void operator()(std::vector<uint8_t>& buffer)
     {
       zmq::message_t reply;
-      m_skt.recv(&reply);
+      get_socket().recv(&reply);
       buffer.resize(reply.size());
       memcpy(buffer.data(), reply.data(), buffer.size());
     }
 };
 
 
+// Handler for requests.
 struct request_handler
   : public echo_handler
   , public read_handler
@@ -62,6 +74,7 @@ struct request_handler
 request_handler req_h;
   
 
+// Handler for replies.
 struct reply_handler
   : public echo_reply_handler
   , public read_reply_handler
@@ -70,35 +83,38 @@ struct reply_handler
 reply_handler rep_h;
   
 
+// Server part.
 void server()
   {
-    IO io_in ("tcp://localhost:5556", ZMQ_PULL);
-    IO io_out("tcp://*:5555",         ZMQ_PUSH);
+    pull_socket pull("tcp://localhost:5556");
+    push_socket push("tcp://*:5555");
     while (true)
       {
         std::vector<uint8_t> in;
-        io_in.read(in);
+        pull(in);
         std::unique_ptr<request_base> req(parse_request(in));
         std::unique_ptr<reply_base>   rep(req->dispatch(req_h));
         
         std::vector<uint8_t> out(rep->encode());
-        io_out.write(out);
+        push(out);
       }
   }
   
+  
+// Client part.
 void client()
   {
-    IO io_in ("tcp://localhost:5555", ZMQ_PULL);
-    IO io_out("tcp://*:5556",         ZMQ_PUSH);
+    pull_socket pull("tcp://localhost:5555");
+    push_socket push("tcp://*:5556");
     while (true)
       {
         echo_request req("hello world!");
         
         std::vector<uint8_t> out(req.encode());
-        io_out.write(out);
+        push(out);
         
         std::vector<uint8_t> in;
-        io_in.read(in);
+        pull(in);
         
         std::unique_ptr<reply_base> rep(parse_reply(in));
         rep->dispatch(rep_h);
@@ -106,8 +122,6 @@ void client()
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
       }
   }
-  
-void readLog() {}
 
 
 request_base* some_req()
@@ -132,87 +146,16 @@ int main(int argc, char** argv)
           {
             std::cout << "Server" << std::endl;
             server();
+            break;
           }
         case 1:
           {
             std::cout << "Client" << std::endl;
             client();
+            break;
           }
       }
     
     
     return 0;
-    
-    echo_request  echo_req("hello world!");
-    read_request  read_req("temp.txt");
-    write_request write_req("foo.txt", "boo");
-    
-    request_handler h;
-    reply_handler   rep_h;
-    
-    
-    std::unique_ptr<echo_reply>  echo_rep0 (echo_handler()(echo_req));
-    
-    
-    std::unique_ptr<read_reply>  read_rep0 (read_handler()(read_req));
-    std::unique_ptr<write_reply> write_rep0(write_handler()(write_req));
-    
-    
-    std::unique_ptr<echo_reply>  echo_rep1 (echo_req.dispatch(h));
-    
-    
-    std::unique_ptr<read_reply>  read_rep1 (read_req.dispatch(h));
-    
-    
-    std::unique_ptr<write_reply> write_rep1(write_req.dispatch(h));
-    
-    std::unique_ptr<request_base> echo_req2 (some_req());
-    std::unique_ptr<reply_base>   echo_rep2 (echo_req2->dispatch(h));
-    
-    
-    {
-      std::vector<uint8_t> buffer = echo_req.encode();
-      
-      std::unique_ptr<request_base> echo_req3 (parse_request(buffer));
-      std::unique_ptr<reply_base>   echo_rep3 (echo_req3->dispatch(h));
-      echo_rep3->dispatch(rep_h);
-    }
-    
-    {
-      std::vector<uint8_t> buffer = read_req.encode();
-
-      std::unique_ptr<request_base> read_req3 (parse_request(buffer));
-      std::unique_ptr<reply_base>   read_rep3 (read_req3->dispatch(h));
-      read_rep3->dispatch(rep_h);
-    }
-
-    {
-      std::vector<uint8_t> buffer = write_req.encode();
-
-      std::unique_ptr<request_base> write_req3 (parse_request(buffer));
-      std::unique_ptr<reply_base>   write_rep3 (write_req3->dispatch(h));
-      write_rep3->dispatch(rep_h);
-    }
-    
-    echo_reply echo_rep4(false, "OK", "hello world!");
-    echo_rep4.dispatch(rep_h);
-    
-    std::unique_ptr<reply_base>
-      echo_rep5(new echo_reply(false, "OK", "hello again!"));
-    
-    echo_rep5->dispatch(rep_h);
-    
-    std::unique_ptr<reply_base>
-      echo_rep6(echo_req.dispatch(h));
-    echo_rep6->dispatch(rep_h);
-
-    
-    {
-      std::vector<uint8_t> buffer = echo_req.encode();
-
-      std::unique_ptr<request_base> echo_req7 (parse_request(buffer));
-      std::unique_ptr<reply_base>   echo_rep7 (echo_req7->dispatch(h));
-      echo_rep7->dispatch(rep_h);
-    }
-    
   }
