@@ -1,6 +1,19 @@
 module Message where
 
-import qualified Data.Text as T
+import Text.ProtocolBuffers.Basic
+import Text.ProtocolBuffers.Reflections
+import Text.ProtocolBuffers.WireMessage
+
+import qualified Data.ByteString.Lazy as BSL
+
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as TE
+
+import qualified File            as File
+import qualified File.ActionType as File
+import qualified File.Echo       as File
+import qualified File.Request    as FileReq
+import qualified File.Reply      as FileRep
 
 
 data Request
@@ -28,3 +41,37 @@ data Answer a
 
 
 type Reply = Answer RepData
+
+
+-- Wrapper for 'messageGet' which returns msg wrapped into 'Maybe'.
+messageGet'
+  :: (ReflectDescriptor msg, Wire msg)
+  => BSL.ByteString
+  -> Maybe msg
+messageGet' buffer =
+  case messageGet buffer of
+    Left _         -> Nothing
+    Right (msg, _) -> Just msg
+
+
+parseRequest' :: BSL.ByteString -> Maybe FileReq.Request
+parseRequest' = messageGet'
+
+parseReply' :: BSL.ByteString -> Maybe FileRep.Reply
+parseReply' = messageGet'
+
+
+parseRequest :: BSL.ByteString -> Maybe Request
+parseRequest buffer =
+  do fReq  <- parseRequest' buffer
+     case FileReq.type' fReq of
+       File.ECHO  ->
+         case FileReq.echo fReq of
+           Nothing    -> Nothing
+           Just fEcho ->
+            case File.data' fEcho of
+              Utf8 data_ ->
+                Just . EchoReq . TE.decodeUtf8 $ BSL.toStrict data_
+                
+       File.READ  -> Nothing
+       File.WRITE -> Nothing

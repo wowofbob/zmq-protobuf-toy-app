@@ -22,6 +22,7 @@ library
                    , protocol-buffers
                    , protocol-buffers-descriptor
                    , text
+                   , bytestring
                   
   hs-source-dirs:      src
   include-dirs:        src
