@@ -66,12 +66,9 @@ parseRequest buffer =
   do fReq  <- parseRequest' buffer
      case FileReq.type' fReq of
        File.ECHO  ->
-         case FileReq.echo fReq of
-           Nothing    -> Nothing
-           Just fEcho ->
+         do fEcho <- FileReq.echo fReq
             case File.data' fEcho of
               Utf8 data_ ->
-                Just . EchoReq . TE.decodeUtf8 $ BSL.toStrict data_
-                
+                Just . EchoReq . TE.decodeUtf8 $ BSL.toStrict data_ 
        File.READ  -> Nothing
        File.WRITE -> Nothing
