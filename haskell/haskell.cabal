@@ -15,10 +15,13 @@ library
                    , File.Reply.Write
                    , File.Request.Read
                    , File.Request.Write
+                   
+                   , Message
     
   build-depends:     base >=4.6 && < 4.10
                    , protocol-buffers
                    , protocol-buffers-descriptor
+                   , text
                   
   hs-source-dirs:      src
   include-dirs:        src
