@@ -36,7 +36,7 @@ public:
 // Socket only for push.
 struct push_socket : public with_socket {
   push_socket(char const* addr)
-    : with_socket(ZMQ_PUSH)
+    : with_socket(ZMQ_PUB)//PUSH)
       {
         get_socket().bind(addr);
       }
@@ -56,11 +56,12 @@ private:
 public:
   pull_socket
     (char const* addr, long timeout = -1)
-    : with_socket(ZMQ_PULL)
+    : with_socket(ZMQ_SUB)//PULL)
     , m_poller()
     , m_timeout(timeout)
       {
         get_socket().connect(addr);
+        get_socket().setsockopt(ZMQ_SUBSCRIBE, "", 0);
         m_poller = { get_socket(), 0, ZMQ_POLLIN, 0};
       }
   bool operator()(std::vector<uint8_t>& buffer)
@@ -97,12 +98,17 @@ struct reply_handler
 reply_handler rep_h;
   
 
+char const* request_transport = "tcp://127.0.0.1:5555";
+char const* reply_transport   = "tcp://127.0.0.1:5556";
+
 // Server part.
 void server()
   {
     uint32_t ctr = 0, ctr_max = 100;
-    pull_socket pull("tcp://localhost:5556", 100);
-    push_socket push("tcp://*:5555");
+    //pull_socket pull("tcp://localhost:5556", 100);
+    //push_socket push("tcp://*:5555");
+    pull_socket pull(request_transport, 100);
+    push_socket push(reply_transport);
     while (true)
       {
         std::cout << "Iteration " << (ctr++) << std::endl;
@@ -130,8 +136,10 @@ void server()
 // Client part.
 void client()
   {
-    pull_socket pull("tcp://localhost:5555", 100);
-    push_socket push("tcp://*:5556");
+    //pull_socket pull("tcp://localhost:5555", 100);
+    //push_socket push("tcp://*:5556");
+    pull_socket pull(reply_transport, 100);
+    push_socket push(request_transport);
     while (true)
       {
         std::cout << "CMD: echo, read, write, quit;" << std::endl;
@@ -182,14 +190,20 @@ void client()
             push(out);
             
             std::vector<uint8_t> in;
+            
+            /*
             while (!pull(in)) {
+              std::cout << "sleeping\n";
               std::this_thread::sleep_for(std::chrono::milliseconds(100));
             }
+            */
             
-            std::unique_ptr<reply_base> rep(parse_reply(in));
-            rep->dispatch(rep_h);
-            
-            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            if (pull(in))
+              {
+                std::unique_ptr<reply_base> rep(parse_reply(in));
+                rep->dispatch(rep_h);
+                //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+              }
           }
       }
   }
