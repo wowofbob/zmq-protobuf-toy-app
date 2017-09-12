@@ -1,9 +1,22 @@
-module Message where
+module Message
+( Request(..)
+, Answer(..)
+, RepData(..)
+, Reply
+, parseReply
+, parseRequest
+, encodeReply
+, encodeReply'
+, encodeRequest
+, encodeRequest'
+) where
+
 
 import Text.ProtocolBuffers.Basic
 import Text.ProtocolBuffers.Reflections
 import Text.ProtocolBuffers.WireMessage
 
+import qualified Data.ByteString      as BS
 import qualified Data.ByteString.Lazy as BSL
 
 import qualified Data.Text          as T
@@ -150,3 +163,10 @@ repToMsg (Answer mErr mMsg repData) =
 
 encodeReply :: Reply -> BSL.ByteString
 encodeReply = messagePut . repToMsg
+
+
+encodeRequest' :: Request -> BS.ByteString
+encodeRequest' = BSL.toStrict . encodeRequest
+
+encodeReply' :: Reply -> BS.ByteString
+encodeReply' = BSL.toStrict . encodeReply
