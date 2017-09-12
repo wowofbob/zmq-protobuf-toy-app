@@ -1,3 +1,5 @@
+protocol-buffers
+haskell/.stack-work
 build
 *~
 *.pb.*
