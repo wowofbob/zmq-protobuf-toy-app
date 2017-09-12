@@ -37,7 +37,10 @@ std::string const& echo_reply::data() const
 echo_reply* echo_handler::
   operator()(echo_request const& req)
     {
-      std::cout << "ECHO: " << req.data() << std::endl;
+      std::cout
+        << "Received ECHO\n"
+        << "  data: " << req.data() << std::endl << std::endl;
+        
       std::string msg("OK");
       echo_reply* rep = new echo_reply(false, msg, req.data());
       return rep;

@@ -108,18 +108,61 @@ void client()
     push_socket push("tcp://*:5556");
     while (true)
       {
-        echo_request req("hello world!");
+        std::cout << "CMD: echo, read, write, quit;" << std::endl;
+        std::cout << "CMD: ";
+        std::string cmd;
+        std::getline(std::cin, cmd);
         
-        std::vector<uint8_t> out(req.encode());
-        push(out);
+        request_base* req = nullptr;
+        if (cmd == "quit")
+          {
+            std::cout << "Exit." << std::endl;
+            break;
+          }
+        else if (cmd == "echo")
+          {
+            std::cout << "  Data: ";
+            std::string data;
+            std::getline(std::cin, data);
+            req = new echo_request(data);
+          }
+        else if (cmd == "read")
+          {
+            std::cout << "  File name: ";
+            std::string filename;
+            std::getline(std::cin, filename);
+            req = new read_request(filename);
+          }
+        else if (cmd == "write")
+          {
+            std::cout << "  File name: ";
+            std::string filename;
+            std::getline(std::cin, filename);
+            std::cout << "  Contents:  ";
+            std::string contents;
+            std::getline(std::cin, contents);
+            req = new write_request(filename, contents);
+          }
+        else
+          {
+            std::cout << "  Error: command is not supported." << std::endl;
+            std::cout << "  Continue."                        << std::endl;
+            continue;
+          }
         
-        std::vector<uint8_t> in;
-        pull(in);
-        
-        std::unique_ptr<reply_base> rep(parse_reply(in));
-        rep->dispatch(rep_h);
-        
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        if (req != nullptr)
+          {            
+            std::vector<uint8_t> out(req->encode());
+            push(out);
+            
+            std::vector<uint8_t> in;
+            pull(in);
+            
+            std::unique_ptr<reply_base> rep(parse_reply(in));
+            rep->dispatch(rep_h);
+            
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+          }
       }
   }
 

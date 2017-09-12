@@ -2,6 +2,7 @@
 
 #include <message.pb.h>
 
+#include <fstream>
 #include <iostream>
 
 
@@ -38,7 +39,14 @@ write_reply::
 write_reply* write_handler::
   operator()(write_request const& req)
     {
-      std::cout << "WRITE: " << req.filename() << ' ' <<  req.contents() << std::endl;
+      std::cout
+        << "Received WRITE\n"
+        << "  filename: " << req.filename() << std::endl
+        << "  contents: " << req.contents() << std::endl << std::endl;
+      
+      std::ofstream out(req.filename());
+      out << req.contents();
+       
       return new write_reply(false, "OK");
     }
 

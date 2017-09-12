@@ -2,7 +2,9 @@
 
 #include <message.pb.h>
 
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
 
 // Request.
@@ -37,8 +39,25 @@ std::string const& read_reply::contents() const
 read_reply* read_handler::
   operator()(read_request const& req)
     {
-      std::cout << "READ: " << req.filename() << std::endl;
-      return new read_reply(false, "OK", "...");
+      std::cout
+        << "Received READ\n"
+        << "  filename: " << req.filename() << std::endl << std::endl;
+      
+      read_reply* rep = nullptr;
+      
+      std::ifstream in(req.filename());
+      if (in.is_open())
+        {
+          std::stringstream sstr;
+          while (in >> sstr.rdbuf());
+          rep = new read_reply(false, "OK", sstr.str());
+        }
+      else
+        {
+          rep = new read_reply(true, "read file error", "");
+        }
+      
+      return rep;
     }
     
 void read_reply_handler::
