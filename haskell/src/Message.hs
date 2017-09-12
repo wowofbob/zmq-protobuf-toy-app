@@ -9,11 +9,15 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as TE
 
-import qualified File            as File
-import qualified File.ActionType as File
-import qualified File.Echo       as File
-import qualified File.Request    as FileReq
-import qualified File.Reply      as FileRep
+import qualified File               as File
+import qualified File.ActionType    as File
+import qualified File.Echo          as File
+import qualified File.Reply         as FileRep
+import qualified File.Reply.Read    as FileRep
+import qualified File.Reply.Write   as FileRep
+import qualified File.Request       as FileReq
+import qualified File.Request.Read  as FileReqRead
+import qualified File.Request.Write as FileReqWrite
 
 
 data Request
@@ -60,15 +64,21 @@ parseRequest' = messageGet'
 parseReply' :: BSL.ByteString -> Maybe FileRep.Reply
 parseReply' = messageGet'
 
+utf8ToText :: Utf8 -> T.Text
+utf8ToText (Utf8 bs) = TE.decodeUtf8 $ BSL.toStrict bs
+
 
 parseRequest :: BSL.ByteString -> Maybe Request
 parseRequest buffer =
   do fReq  <- parseRequest' buffer
+  
      case FileReq.type' fReq of
-       File.ECHO  ->
-         do fEcho <- FileReq.echo fReq
-            case File.data' fEcho of
-              Utf8 data_ ->
-                Just . EchoReq . TE.decodeUtf8 $ BSL.toStrict data_ 
-       File.READ  -> Nothing
-       File.WRITE -> Nothing
+       File.ECHO ->
+         EchoReq . utf8ToText . File.data' <$> FileReq.echo fReq
+       File.READ  ->
+         ReadReq . utf8ToText . FileReqRead.filename <$> FileReq.read fReq
+       File.WRITE ->
+          do fRW <- FileReq.write fReq
+             let fileName = utf8ToText . FileReqWrite.filename $ fRW
+                 contents = utf8ToText . FileReqWrite.contents $ fRW
+             Just (WriteReq fileName contents)
