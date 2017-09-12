@@ -49,18 +49,32 @@ struct push_socket : public with_socket {
 };
 
 // Socket only for pull.
-struct pull_socket : public with_socket {
-  pull_socket(char const* addr)
+class pull_socket : public with_socket {
+private:
+  zmq::pollitem_t m_poller;
+  long            m_timeout;
+public:
+  pull_socket
+    (char const* addr, long timeout = -1)
     : with_socket(ZMQ_PULL)
+    , m_poller()
+    , m_timeout(timeout)
       {
         get_socket().connect(addr);
+        m_poller = { get_socket(), 0, ZMQ_POLLIN, 0};
       }
-  void operator()(std::vector<uint8_t>& buffer)
+  bool operator()(std::vector<uint8_t>& buffer)
     {
       zmq::message_t reply;
-      get_socket().recv(&reply);
-      buffer.resize(reply.size());
-      memcpy(buffer.data(), reply.data(), buffer.size());
+      zmq::poll(&m_poller, 1, m_timeout);
+      if (m_poller.revents & ZMQ_POLLIN)
+        {
+          get_socket().recv(&reply);
+          buffer.resize(reply.size());
+          memcpy(buffer.data(), reply.data(), buffer.size());
+          return true;
+        }
+      return false;
     }
 };
 
@@ -86,17 +100,29 @@ reply_handler rep_h;
 // Server part.
 void server()
   {
-    pull_socket pull("tcp://localhost:5556");
+    uint32_t ctr = 0, ctr_max = 100;
+    pull_socket pull("tcp://localhost:5556", 100);
     push_socket push("tcp://*:5555");
     while (true)
       {
-        std::vector<uint8_t> in;
-        pull(in);
-        std::unique_ptr<request_base> req(parse_request(in));
-        std::unique_ptr<reply_base>   rep(req->dispatch(req_h));
+        std::cout << "Iteration " << (ctr++) << std::endl;
         
-        std::vector<uint8_t> out(rep->encode());
-        push(out);
+        std::vector<uint8_t> in;
+        if (pull(in))
+          {
+            std::unique_ptr<request_base> req(parse_request(in));
+            std::unique_ptr<reply_base>   rep(req->dispatch(req_h));
+            
+            std::vector<uint8_t> out(rep->encode());
+            push(out);
+          }
+        else
+          {
+            if (ctr == ctr_max)
+              {
+                break;
+              }
+          }
       }
   }
   
@@ -104,7 +130,7 @@ void server()
 // Client part.
 void client()
   {
-    pull_socket pull("tcp://localhost:5555");
+    pull_socket pull("tcp://localhost:5555", 100);
     push_socket push("tcp://*:5556");
     while (true)
       {
@@ -156,7 +182,9 @@ void client()
             push(out);
             
             std::vector<uint8_t> in;
-            pull(in);
+            while (!pull(in)) {
+              std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
             
             std::unique_ptr<reply_base> rep(parse_reply(in));
             rep->dispatch(rep_h);
