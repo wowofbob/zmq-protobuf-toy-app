@@ -9,7 +9,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as TE
 
-import qualified File               as File
 import qualified File.ActionType    as File
 import qualified File.Echo          as File
 import qualified File.Reply         as FileRep
@@ -58,12 +57,6 @@ messageGet' buffer =
     Right (msg, _) -> Just msg
 
 
-parseRequest' :: BSL.ByteString -> Maybe FileReq.Request
-parseRequest' = messageGet'
-
-parseReply' :: BSL.ByteString -> Maybe FileRep.Reply
-parseReply' = messageGet'
-
 utf8ToText :: Utf8 -> T.Text
 utf8ToText (Utf8 bs) = TE.decodeUtf8 $ BSL.toStrict bs
 
@@ -95,7 +88,7 @@ parseReply buffer =
                     do mContents <- FileRep.contents <$> FileRep.read fRep
                        ReadRepData . utf8ToText <$> mContents 
                   File.WRITE ->
-                    do mRW <- FileRep.write fRep
+                    do _ <- FileRep.write fRep
                        Just WriteRepData
          
          -- Error and message field should be required too I guess.
@@ -137,23 +130,23 @@ encodeRequest = messagePut . reqToMsg
   
 repToMsg :: Reply -> FileRep.Reply
 repToMsg (Answer mErr mMsg repData) =
-  let error   = mErr
-      message = textToUtf8 <$> mMsg
-      type_   = case repData of
+  let error_   = mErr
+      message_ = textToUtf8 <$> mMsg
+      type_    = case repData of
                   EchoRepData  _ -> File.ECHO
                   ReadRepData  _ -> File.READ
                   WriteRepData   -> File.WRITE 
-      echo_   = case repData of
+      echo_    = case repData of
                   EchoRepData data_ -> Just . File.Echo $ textToUtf8 data_
                   _ -> Nothing
-      read_   = case repData of
+      read_    = case repData of
                   ReadRepData contents ->
                     Just . FileRep.Read . Just $ textToUtf8 contents
                   _ -> Nothing
-      write_  = case repData of
+      write_   = case repData of
                   WriteRepData -> Just FileRep.Write
                   _ -> Nothing
-    in FileRep.Reply type_ error message echo_ read_ write_ 
+    in FileRep.Reply type_ error_ message_ echo_ read_ write_ 
 
 encodeReply :: Reply -> BSL.ByteString
 encodeReply = messagePut . repToMsg
