@@ -103,3 +103,34 @@ parseReply buffer =
          mMessage = utf8ToText <$> FileRep.message fRep
      
      Just (Answer mError mMessage repData)
+
+
+textToUtf8 :: T.Text -> Utf8
+textToUtf8 = Utf8 . BSL.fromStrict . TE.encodeUtf8
+
+
+reqToMsg :: Request -> FileReq.Request
+reqToMsg (EchoReq data_) =
+  let type_  = File.ECHO
+      echo_  = Just (File.Echo (textToUtf8 data_))
+      read_  = Nothing
+      write_ = Nothing
+    in FileReq.Request type_ echo_ read_ write_
+reqToMsg (ReadReq fileName) =
+  let type_  = File.READ
+      echo_  = Nothing
+      read_  = Just (FileReqRead.Read (textToUtf8 fileName))
+      write_ = Nothing
+    in FileReq.Request type_ echo_ read_ write_
+reqToMsg (WriteReq fileName contents) =
+  let type_  = File.WRITE
+      echo_  = Nothing
+      read_  = Nothing
+      write_ = Just (FileReqWrite.Write
+                      (textToUtf8 fileName)
+                      (textToUtf8 contents))
+    in FileReq.Request type_ echo_ read_ write_
+ 
+encodeRequest :: Request -> BSL.ByteString
+encodeRequest = messagePut . reqToMsg
+  
