@@ -27,7 +27,7 @@ public:
     : m_ctx(1)
     , m_skt(m_ctx, type)
       {
-        if (type == ZMQ_REP)
+        if (type == ZMQ_PUSH)
           {
             m_skt.bind(addr);
           }
@@ -72,30 +72,33 @@ reply_handler rep_h;
 
 void server()
   {
-    IO io("tcp://*:5555", ZMQ_REP);
+    IO io_in ("tcp://localhost:5556", ZMQ_PULL);
+    IO io_out("tcp://*:5555",         ZMQ_PUSH);
     while (true)
       {
         std::vector<uint8_t> in;
-        io.read(in);
+        io_in.read(in);
         std::unique_ptr<request_base> req(parse_request(in));
         std::unique_ptr<reply_base>   rep(req->dispatch(req_h));
+        
         std::vector<uint8_t> out(rep->encode());
-        io.write(out);
+        io_out.write(out);
       }
   }
   
 void client()
   {
-    IO io("tcp://localhost:5555", ZMQ_REQ);
+    IO io_in ("tcp://localhost:5555", ZMQ_PULL);
+    IO io_out("tcp://*:5556",         ZMQ_PUSH);
     while (true)
       {
         echo_request req("hello world!");
         
         std::vector<uint8_t> out(req.encode());
-        io.write(out);
+        io_out.write(out);
         
         std::vector<uint8_t> in;
-        io.read(in);
+        io_in.read(in);
         
         std::unique_ptr<reply_base> rep(parse_reply(in));
         rep->dispatch(rep_h);
