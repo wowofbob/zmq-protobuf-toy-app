@@ -9,6 +9,8 @@ module Message
 , encodeReply'
 , encodeRequest
 , encodeRequest'
+, parseRequest'
+, parseReply'
 ) where
 
 
@@ -40,6 +42,7 @@ data Request
   | WriteReq
       { reqWriteFileName :: T.Text
       , reqWriteContents :: T.Text }
+  deriving Show
 
 data RepData
   = EchoRepData
@@ -54,7 +57,7 @@ data Answer a
   { answError   :: Maybe Bool
   , answMessage :: Maybe T.Text
   , answData    :: a }
-
+  deriving Show
 
 type Reply = Answer RepData
 
@@ -170,3 +173,10 @@ encodeRequest' = BSL.toStrict . encodeRequest
 
 encodeReply' :: Reply -> BS.ByteString
 encodeReply' = BSL.toStrict . encodeReply
+
+
+parseRequest' :: BS.ByteString -> Maybe Request
+parseRequest' = parseRequest . BSL.fromStrict
+
+parseReply' :: BS.ByteString -> Maybe Reply
+parseReply' = parseReply . BSL.fromStrict
