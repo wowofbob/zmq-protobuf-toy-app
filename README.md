@@ -23,9 +23,9 @@ The `haskell` `app` tells how to run it. I haven't done the same for `c++`.
 
 # How to build.
 
-To build `c++` part, just use `make`. `make` call `protoc` compiler. So it seems to work fine.
+To build `c++` part, just use `make`. `make` calls `protoc` compiler. So it seems to work fine.
 
-To build `haskell` part, use `hprotoc` first. I didn't add it to `build-tools` to `.cabal`.
+To build `haskell` part, use `hprotoc` first. I didn't add it into `build-tools` to `.cabal`.
 ```sh
 hprotoc --proto_path=. --haskell_out=hs messge.proto
 ```
