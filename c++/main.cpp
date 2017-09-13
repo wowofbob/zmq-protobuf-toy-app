@@ -70,7 +70,7 @@ public:
       zmq::poll(&m_poller, 1, m_timeout);
       if (m_poller.revents & ZMQ_POLLIN)
         {
-          get_socket().recv(&reply);
+          get_socket().recv(&reply, ZMQ_NOBLOCK);
           buffer.resize(reply.size());
           memcpy(buffer.data(), reply.data(), buffer.size());
           return true;
