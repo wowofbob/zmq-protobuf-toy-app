@@ -31,6 +31,12 @@ library
   
 executable app
   build-depends:    base < 5
+                  , zeromq4-haskell
+                  , bytestring
+                  , text
+                  , transformers
+                  , monadplus
+                  , directory
   build-depends:    haskell
   hs-source-dirs:   app
   main-is:          Main.hs

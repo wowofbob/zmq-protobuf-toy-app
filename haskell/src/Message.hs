@@ -69,7 +69,7 @@ messageGet'
   -> Maybe msg
 messageGet' buffer =
   case messageGet buffer of
-    Left _         -> Nothing
+    Left  _        -> Nothing
     Right (msg, _) -> Just msg
 
 
