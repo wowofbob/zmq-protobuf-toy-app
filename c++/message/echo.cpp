@@ -82,7 +82,7 @@ std::vector<uint8_t> echo_request::encode() const
   {
     ::file::Request req;
     
-    req.set_type(::file::READ);
+    req.set_type(::file::ECHO);
     
     ::file::Echo* echo = new ::file::Echo();
     echo->set_data(data());
