@@ -15,11 +15,11 @@ The user can run `c++` or `haskell` client or server. The `haskell` client is no
 
 # How to run.
 
-Both `c++` and `haskell` binary are called `app`.
+Both `c++` and `haskell` binaries are called `app`.
 
 Call `app 0` to run server or `app 1` to run client.
 
-The `haskell` `app` tells how to run it. I didn't the same it in `c++`.
+The `haskell` `app` tells how to run it. I haven't done the same for `c++`.
 
 # How to build.
 
